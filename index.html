@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tangent Plane & Normal Line Calculator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/12.4.2/math.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" integrity="sha384-nK8P5jymz6E5y/3r7N+5Bw+o0M6F4p3U3+uR8PzNn8A/Cg7vE5b6oFmPj4I+GgE6" crossorigin="anonymous">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js" integrity="sha384-y7N59E0iN10hE65l/j7WnBvOa5q17wB7j+M1x9c1JzU3v7hT3J8T9q2/k5g2t9Q9" crossorigin="anonymous"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js" integrity="sha384-4hJc5C5QGj5PzX35Q8+gP4N6r5b7y7pG1+6m4f3j7t3fFjF5g5F5j5J4y5v5h4w5j" crossorigin="anonymous" onload="renderMathInElement(document.body);"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #1f2937; /* Dark background */
+            color: #f3f4f6;
+        }
+        /* CRITICAL FIX: Set input text to black (text-black) and input background to white (bg-white).
+           The added !important makes sure the browser cannot override the text color. */
+        .input-field {
+            @apply bg-white text-black placeholder-gray-500 border border-gray-600 rounded-lg px-4 py-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-150;
+            color: black !important; /* Overriding all possible issues */
+        }
+        /* Specific styling for the placeholder text to ensure it's visible (dark gray) */
+        .input-field::placeholder {
+            color: #6b7280; /* Tailwind gray-500 */
+        }
+        .result-box {
+            @apply p-6 bg-gray-800 rounded-xl shadow-lg border border-blue-600/50;
+        }
+        /* Custom styling for KaTeX results to look good */
+        .katex-container {
+            font-size: 1.5rem; /* Larger font size for results */
+            padding: 0.75rem;
+            background-color: #374151; /* bg-gray-700 */
+            border-radius: 0.5rem; /* rounded-lg */
+            overflow-x: auto;
+            display: block; /* Ensure it takes full width */
+            text-align: center; /* Center the equation */
+        }
+    </style>
+</head>
+<body class="min-h-screen p-4 sm:p-8 flex items-center justify-center">
+
+    <div class="max-w-4xl w-full">
+        <h1 class="text-4xl font-bold text-center mb-10 text-blue-400">
+            Tangent Plane & Normal Line Calculator
+        </h1>
+
+        <div class="bg-gray-800 p-6 sm:p-8 rounded-xl shadow-2xl mb-8 border border-gray-700">
+            <h2 class="text-2xl font-semibold mb-4 text-blue-300">1. Enter Function and Point</h2>
+
+            <div class="mb-6">
+                <label for="function-input" class="block text-lg font-medium mb-2">Function F(x, y, z):</label>
+                <input type="text" id="function-input" class="input-field text-xl" placeholder="e.g., x^2 + y^2 + z^2 - 25" value="">
+            </div>
+
+            <div class="grid grid-cols-3 gap-4 mb-8">
+                <div>
+                    <label for="x0-input" class="block font-medium mb-1">Point x₀:</label>
+                    <input type="number" id="x0-input" class="input-field" placeholder="x-coordinate" value="">
+                </div>
+                <div>
+                    <label for="y0-input" class="block font-medium mb-1">Point y₀:</label>
+                    <input type="number" id="y0-input" class="input-field" placeholder="y-coordinate" value="">
+                </div>
+                <div>
+                    <label for="z0-input" class="block font-medium mb-1">Point z₀:</label>
+                    <input type="number" id="z0-input" class="input-field" placeholder="z-coordinate" value="">
+                </div>
+            </div>
+
+            <button onclick="calculateEquations()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition duration-300 shadow-lg shadow-blue-500/50">
+                Calculate Equations
+            </button>
+        </div>
+
+        <div id="result-output" class="result-box hidden">
+            <h2 class="text-2xl font-semibold mb-4">2. Results</h2>
+
+            <div class="mb-6">
+                <h3 class="text-xl font-medium mb-2 text-blue-300">Normal Vector (Gradient):</h3>
+                <div id="gradient-vector" class="katex-container"></div>
+                <p class="text-sm text-gray-400 mt-1">Components (a, b, c) at the given point.</p>
+            </div>
+
+            <div class="mb-6">
+                <h3 class="text-xl font-medium mb-2 text-blue-300">Tangent Plane Equation:</h3>
+                <div id="tangent-plane-eq" class="katex-container"></div>
+                <p class="text-sm text-gray-400 mt-1">In the form Ax + By + Cz = D.</p>
+            </div>
+
+            <div>
+                <h3 class="text-xl font-medium mb-2 text-blue-300">Normal Line (Symmetric Form):</h3>
+                <div id="normal-line-eq" class="katex-container"></div>
+                <p class="text-sm text-gray-400 mt-1">In the form of equal ratios.</p>
+            </div>
+        </div>
+
+        <div id="error-message" class="hidden p-4 bg-red-800 rounded-lg border border-red-600 text-red-200 text-center font-medium transition duration-300">
+            </div>
+         <div class="mt-8 text-center">
+    <a href="https://www.linkedin.com/in/tehreem22/" target="_blank" rel="noopener noreferrer" 
+       class="inline-flex items-center bg-blue-700 hover:bg-blue-800 text-white font-semibold p-3 rounded-xl transition duration-300 shadow-lg shadow-blue-500/50">
+        <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764 0-.974.784-1.764 1.75-1.764.967 0 1.75.79 1.75 1.764 0 .974-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.518-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/>
+        </svg>
+    </a>
+</div>
+<div class="mt-4 pb-8 text-center text-gray-400 text-sm">
+            Made by <span class="text-blue-400 font-medium">Tehreem Rana</span>
+        </div>
+    </div>
+
+    <script>
+        // --- Utility Functions ---
+
+        function renderMath(elementId, latexString) {
+            const element = document.getElementById(elementId);
+            try {
+                element.innerHTML = '';
+                katex.render(latexString, element, {
+                    throwOnError: false,
+                    displayMode: true 
+                });
+            } catch (e) {
+                console.error("KaTeX Rendering Error:", e);
+                element.textContent = latexString; 
+            }
+        }
+
+        function displayError(message) {
+            const errorDiv = document.getElementById('error-message');
+            const resultDiv = document.getElementById('result-output');
+            // The message here might still contain LaTeX if the error is math-related, which is necessary for clarity.
+            renderMath('error-message', message); 
+            errorDiv.classList.remove('hidden', 'katex-container'); 
+            errorDiv.classList.add('p-4', 'bg-red-800', 'rounded-lg');
+            resultDiv.classList.add('hidden');
+        }
+
+        function hideError() {
+            document.getElementById('error-message').classList.add('hidden');
+        }
+
+        const mathConfig = { precision: 5 };
+        
+        function formatNumber(n) {
+            if (Math.abs(n) < 1e-9) return '0';
+            return math.format(n, mathConfig);
+        }
+
+        // --- Main Calculation Logic ---
+
+        async function calculateEquations() {
+            hideError();
+
+            const fStr = document.getElementById('function-input').value.trim();
+            // Use Math.js's parser to handle complex expressions for coordinates if entered (e.g., 'sqrt(4)')
+            const x0 = math.evaluate(document.getElementById('x0-input').value || 0);
+            const y0 = math.evaluate(document.getElementById('y0-input').value || 0);
+            const z0 = math.evaluate(document.getElementById('z0-input').value || 0);
+            
+
+            if (!fStr || isNaN(x0) || isNaN(y0) || isNaN(z0) || typeof x0 !== 'number' || typeof y0 !== 'number' || typeof z0 !== 'number') {
+                return displayError("Please enter a valid function and valid numerical coordinates for the point.");
+            }
+
+
+            try {
+                const F = math.parse(fStr);
+                const scope = { x: x0, y: y0, z: z0 };
+
+                const Fx = math.derivative(F, 'x');
+                const a = Fx.evaluate(scope);
+
+                const Fy = math.derivative(F, 'y');
+                const b = Fy.evaluate(scope);
+
+                const Fz = math.derivative(F, 'z');
+                const c = Fz.evaluate(scope);
+                
+                if (Math.abs(a) < 1e-9 && Math.abs(b) < 1e-9 && Math.abs(c) < 1e-9) {
+                    return displayError("The gradient vector $\\nabla F$ is the zero vector at this point. A unique tangent plane cannot be determined.");
+                }
+
+                // 2. Normal Vector
+                const Af = formatNumber(a);
+                const Bf = formatNumber(b);
+                const Cf = formatNumber(c);
+                // This LaTeX string is correct and will render as <a, b, c>
+                // New: Outputs the vector in plain text format <a, b, c>
+                 const grad_vector_latex = `<${Af}, ${Bf}, ${Cf}>`;
+                renderMath('gradient-vector', grad_vector_latex);
+
+                // 3. Tangent Plane (Calculation logic remains correct)
+                const A = a;
+                const B = b;
+                const C = c;
+                const D = A * x0 + B * y0 + C * z0;
+
+                const Df = formatNumber(D);
+                
+                const formatTermLatex = (coeff, variable) => {
+                    if (Math.abs(coeff) < 1e-9) return '';
+                    const abs_f = formatNumber(Math.abs(coeff)).replace(/^1$/, ''); 
+                    
+                    if (coeff > 0) return `+ ${abs_f}${variable}`;
+                    return `- ${abs_f}${variable}`;
+                };
+
+                let planeEq = '';
+                
+                const xTerm = (Math.abs(A) < 1e-9) ? '' : (A > 0 ? `${formatNumber(A).replace(/^1$/, '')}x` : `-${formatNumber(Math.abs(A)).replace(/^1$/, '')}x`);
+                planeEq += xTerm;
+
+                planeEq += formatTermLatex(B, 'y');
+                planeEq += formatTermLatex(C, 'z');
+                
+                if (planeEq.startsWith('+ ')) {
+                    planeEq = planeEq.substring(2);
+                } else if (planeEq.startsWith(' ')) {
+                    planeEq = planeEq.substring(1);
+                }
+
+                if (planeEq === '') planeEq = '0'; 
+                const planeEq_latex = `${planeEq.trim()} = ${Df}`;
+
+                renderMath('tangent-plane-eq', planeEq_latex);
+                
+                // 4. Normal Line 
+                const formatSymmetricComponentInline = (coeff, variable, point) => {
+                    
+                    // Numerator Logic (x - x0)
+                    const point_f_abs = formatNumber(Math.abs(point));
+                    let numerator;
+
+                    if (Math.abs(point) < 1e-9) {
+                        numerator = variable; // e.g., y - 0 becomes y
+                    } else {
+                        const sign = point < 0 ? ' + ' : ' - ';
+                        numerator = `(${variable}${sign}${point_f_abs})`;
+                    }
+
+                    // Denominator Logic: Use '0' string for zero coefficient to maintain symmetric form
+                    const denominator = (Math.abs(coeff) < 1e-9) ? '0' : formatNumber(coeff);
+                    
+                    // Combine in inline division format
+                    return `${numerator} / ${denominator}`;
+                };
+
+                let components = [];
+                components.push(formatSymmetricComponentInline(a, 'x', x0));
+                components.push(formatSymmetricComponentInline(b, 'y', y0));
+                components.push(formatSymmetricComponentInline(c, 'z', z0));
+
+                // Join all components with '='
+                const lineEq_latex = components.join(' = ');
+
+                renderMath('normal-line-eq', lineEq_latex);
+
+                document.getElementById('result-output').classList.remove('hidden');
+
+            } catch (e) {
+                console.error(e);
+                displayError("An error occurred during calculation. Please check your function syntax. (Use standard operators like '+', '*', '^', and functions like 'sin(x)', 'exp(z)').");
+            }
+        }
+    </script>
+
+</body>
+</html>
