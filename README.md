@@ -18,13 +18,7 @@ This project is a specialized calculator designed to determine the **Tangent Pla
 ## 🔗 Live Implementation
 To test the calculator's logic and interface, visit the link below:
 
-<p align="left">
-  <a href="https://tehreem-rana.github.io/TangentTools/" target="_blank">
-    <img src="https://img.shields.io/badge/Visit%20Live%20Project-4B0082?style=for-the-badge&logo=google-chrome&logoColor=white" alt="Live Demo" />
-  </a>
-</p>
-
-**Direct Link:** [https://tehreem-rana.github.io/TangentTools/](https://tehreem-rana.github.io/TangentTools/)
+**Link:** [https://tehreem-rana.github.io/TangentTools/](https://tehreem-rana.github.io/TangentTools/)
 
 ---
 
